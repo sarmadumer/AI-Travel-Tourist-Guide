@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AI Travel Guide</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/typed.js@2.1.0/dist/typed.umd.js"></script>
+  <style>
+    body {
+      background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+      color: white;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .card {
+      backdrop-filter: blur(12px);
+      background: rgba(255, 255, 255, 0.12);
+      border-radius: 24px;
+      padding: 24px;
+      box-shadow: 0px 10px 30px rgba(0,0,0,0.4);
+      transition: transform 0.3s ease-in-out, opacity 0.5s ease;
+    }
+    .card:hover {
+      transform: scale(1.03);
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen px-4">
+
+  <h1 class="text-4xl font-bold mb-8 text-center">
+    <span id="typed"></span>
+  </h1>
+
+  <!-- Input Card -->
+  <div id="inputCard" class="card w-full max-w-2xl text-center">
+    <input id="country" type="text" placeholder="Enter Country" 
+           class="w-full p-3 mb-4 rounded-xl text-black focus:ring-2 focus:ring-blue-400 outline-none" required>
+    <input id="city" type="text" placeholder="Enter City/State (Optional)" 
+           class="w-full p-3 mb-4 rounded-xl text-black focus:ring-2 focus:ring-blue-400 outline-none">
+    <button onclick="getTravelInfo()" 
+            class="bg-gradient-to-r from-teal-400 to-blue-500 hover:from-teal-500 hover:to-blue-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition">
+      ✨ Explore
+    </button>
+  </div>
+
+  <!-- Output Card -->
+  <div id="outputCard" class="card w-full max-w-2xl text-left hidden mt-6">
+    <div id="output" class="whitespace-pre-line"></div>
+    <button onclick="resetForm()" 
+            class="mt-6 w-full bg-gradient-to-r from-gray-300 to-gray-400 hover:from-gray-400 hover:to-gray-500 text-black font-bold py-3 px-6 rounded-xl shadow-lg transition">
+      🔄 Search Again
+    </button>
+  </div>
+
+  <script>
+    // Typing animation
+    new Typed("#typed", {
+      strings: ["🌍 Your AI Travel Guide", "✈️ Explore the World with AI"],
+      typeSpeed: 60,
+      backSpeed: 40,
+      loop: true
+    });
+
+    async function getTravelInfo() {
+      const country = document.getElementById("country").value.trim();
+      const city = document.getElementById("city").value.trim();
+      const outputDiv = document.getElementById("output");
+      const inputCard = document.getElementById("inputCard");
+      const outputCard = document.getElementById("outputCard");
+
+      if (!country) {
+        outputDiv.innerHTML = "<p class='text-red-400 font-semibold'>⚠️ Please enter a country name.</p>";
+        outputCard.classList.remove("hidden");
+        inputCard.classList.add("hidden");
+        return;
+      }
+
+      // Switch to output card
+      inputCard.classList.add("hidden");
+      outputCard.classList.remove("hidden");
+      outputDiv.innerHTML = "<p class='text-yellow-300 animate-pulse'>✨ Fetching travel info...</p>";
+
+      const response = await fetch("http://127.0.0.1:5000/get_travel_info", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ country, city })
+      });
+
+      const data = await response.json();
+      if (data.error) {
+        outputDiv.innerHTML = `<p class='text-red-400'>❌ ${data.error}</p>`;
+      } else {
+        outputDiv.innerHTML = `
+          <div class="p-6 rounded-2xl bg-gradient-to-r from-emerald-400 via-teal-500 to-purple-600 shadow-lg">
+
+            <h2 class="text-2xl font-bold mb-4">📍 Travel Destination</h2>
+            <div class="text-lg leading-relaxed">
+              ${data.travel_info}
+            </div>
+          </div>`;
+      }
+    }
+
+    function resetForm() {
+      const inputCard = document.getElementById("inputCard");
+      const outputCard = document.getElementById("outputCard");
+      document.getElementById("country").value = "";
+      document.getElementById("city").value = "";
+      document.getElementById("output").innerHTML = "";
+      outputCard.classList.add("hidden");
+      inputCard.classList.remove("hidden");
+    }
+  </script>
+
+</body>
+</html>
